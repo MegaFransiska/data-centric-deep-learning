@@ -16,3 +16,4 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
 
 RUN sudo apt-get update && sudo apt-get install -y libgl1
+ENV HOME="/home/gitpod"
