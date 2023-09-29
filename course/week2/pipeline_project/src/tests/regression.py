@@ -69,9 +69,9 @@ def build_regression_test(system, loader):
     # Each value represents whether the model made a correct prediction (1 
     # if the model was right and 0 if the model was wrong). It will likely 
     # look something like:
-    #
-    #   batch_is_correct = [1, 1, 0, 1, 0, 0, ...]
-    # 
+
+    batch_is_correct = (labels==preds).long().tolist()
+
     # For the second one, compute the loss between the predicted logit and 
     # the true label, and store this in `losses`. For instance:
     # 
@@ -88,11 +88,9 @@ def build_regression_test(system, loader):
     # 
     # Our solution is 2-3 lines of code. 
     # 
-    # Pseudocode:
-    # -- 
-    # batch_loss = ...
-    # convert batch_loss to list of floats
-    # 
+ 
+    batch_loss = F.cross_entropy(logits, labels, reduction='none').tolist()
+
     # Type:
     # --
     # batch_loss: List[float] (not a torch.Tensor!)
