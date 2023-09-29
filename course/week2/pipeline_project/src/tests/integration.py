@@ -56,9 +56,9 @@ class MNISTIntegrationTest(BaseTest):
     #
     # Pseudocode:
     # --
-    # loader = ...
+    loader = self.get_dataloader()
     # pass loader to trainer and call test
-    #
+    trainer.test(system, dataloaders = loader)
     # Notes:
     # --
     # Nothing to return here
