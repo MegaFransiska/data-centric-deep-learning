@@ -159,10 +159,8 @@ class MNISTDirectionalityTest(BaseTest):
       # You can extract a value from a torch.Tensor with `.item()`.
       # 
       # Our solution is one line of code.
-      # 
-      # Pseudocode:
       # --
-      # batch_metric = ...
+      batch_metric = (preds_raw==preds_transformed).long().sum() / len(preds_raw)
       # 
       # Type:
       # --
