@@ -19,7 +19,7 @@ from torchvision import transforms
 from src.system import DigitClassifierSystem
 
 # this is a special path for the deployed model
-MODEL_PATH: str = join(Path(__file__).parent, "ckpts/deploy.ckpt")
+MODEL_PATH: str = join(Path(__file__).parent, "artifacts/ckpts/deploy.ckpt")
 
 
 class InferenceInput(BaseModel):
@@ -61,7 +61,7 @@ app: FastAPI = FastAPI(
 
 
 @app.on_event("startup")
-async def startup_event():
+async def startup_event(): #called once
   r"""Initialize FastAPI."""
   print(f'Loading digit classifier system from {MODEL_PATH}')
   system = DigitClassifierSystem.load_from_checkpoint(MODEL_PATH)
@@ -128,7 +128,7 @@ def predict(request: Request, body: InferenceInput):
     # 
     # Pseudocode:
     # --
-    # logits = ... (use system)
+    logits = system.predict_step(im)
     # 
     # Types:
     # --
@@ -149,7 +149,7 @@ def predict(request: Request, body: InferenceInput):
     # 
     # Pseudocode:
     # --
-    # probs = ...do something to logits...
+    probs = F.softmax(logits, dim=1)
     # 
     # Types:
     # --
