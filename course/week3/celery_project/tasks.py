@@ -44,7 +44,7 @@ class PredictionTask(Task):
     # 
     # Pseudocode:
     # --
-    # system = ...
+    system = DigitClassifierSystem.load_from_checkpoint(MODEL_PATH)
     # 
     # Types:
     # --
@@ -97,7 +97,7 @@ def predict_single(self, data):
     # 
     # Pseudocode:
     # --
-    # logits = ... (use system)
+    logits = self.system.predict_step(im)
     # 
     # Types:
     # --
@@ -117,7 +117,7 @@ def predict_single(self, data):
     # 
     # Pseudocode:
     # --
-    # probs = ...do something to logits...
+    probs = F.softmax(logits, dim=1)
     # 
     # Types:
     # --
@@ -135,7 +135,7 @@ def predict_single(self, data):
   # why we need Celery.
   # 
   # Uncomment me when you are told to in the notes!
-  # time.sleep(5)
+  time.sleep(5)
   # ================================
 
   return results
