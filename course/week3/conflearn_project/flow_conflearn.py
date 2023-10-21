@@ -129,7 +129,7 @@ class TrainIdentifyReview(FlowSpec):
     probs = np.zeros(len(X))  # we will fill this in
 
     # https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.KFold.html
-    kf = KFold(n_splits=3)    # create kfold splits
+    kf = KFold(n_splits=5)    # create kfold splits
 
     for train_index, test_index in kf.split(X):
       probs_ = None
@@ -168,8 +168,30 @@ class TrainIdentifyReview(FlowSpec):
       # --
       # probs_: np.array[float] (shape: |test set|)
       # ===============================================
+      X_train, y_train = X[train_index], y[train_index]
+      X_test, y_test = X[test_index], y[test_index]
+
+      X_train = torch.from_numpy(X_train).float()
+      X_test = torch.from_numpy(X_test).float()
+      y_train = torch.from_numpy(y_train).long()
+      y_test = torch.from_numpy(y_test).long()
+
+      ds_train = TensorDataset(X_train, y_train)
+      ds_test = TensorDataset(X_test, y_test)
+
+      dl_train = DataLoader(ds_train, batch_size=32, shuffle=True, drop_last=True)
+      dl_test = DataLoader(ds_test, batch_size=32, drop_last=True)
+
+      system = SentimentClassifierSystem(self.config)
+
+      trainer = Trainer(max_epochs=10)
+      trainer.fit(system, train_dataloaders = dl_train, val_dataloaders = dl_test)
+
+      probs_ = trainer.predict(system, dataloaders = dl_test)
+      probs_ = np.concatenate([p.cpu().numpy() for p in probs_], axis=0)
+
       assert probs_ is not None, "`probs_` is not defined."
-      probs[test_index] = probs_
+      probs[test_index.reshape(-1,1)] = probs_
 
     # create a single dataframe with all input features
     all_df = pd.concat([
@@ -211,6 +233,7 @@ class TrainIdentifyReview(FlowSpec):
     # Types
     # --
     # ranked_label_issues: List[int]
+    ranked_label_issues = find_label_issues(self.all_df.label, prob, return_indices_ranked_by='self_confidence')
     # =============================
     assert ranked_label_issues is not None, "`ranked_label_issues` not defined."
 
@@ -308,6 +331,10 @@ class TrainIdentifyReview(FlowSpec):
     # dm.dev_dataset.data = dev slice of self.all_df
     # dm.test_dataset.data = test slice of self.all_df
     # # ====================================
+
+    dm.train_dataset.data = self.all_df[:train_size].reset_index(drop=True)
+    dm.dev_dataset.data = self.all_df[train_size:train_size+dev_size].reset_index(drop=True)
+    dm.test_dataset.data = self.all_df[train_size+dev_size:].reset_index(drop=True)
 
     # start from scratch
     system = SentimentClassifierSystem(self.config)
